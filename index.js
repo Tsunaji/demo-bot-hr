@@ -3,28 +3,23 @@
 
 // index.js is used to setup and configure your bot
 
-// Import required pckages
+// Import required packages
 const path = require('path');
 const restify = require('restify');
 
 // Import required bot services. See https://aka.ms/bot-services to learn more about the different parts of a bot.
-const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
+const { BotFrameworkAdapter } = require('botbuilder');
+const { DispatchBot } = require('./bots/dispatchBot');
 
-// This bot's main dialog.
-const { DialogAndWelcomeBot } = require('./bots/dialogAndWelcomeBot');
-const { MainDialog } = require('./dialogs/mainDialog');
-
-// Note: Ensure you have a .env file and include LuisAppId, LuisAPIKey and LuisAPIHostName.
+// Note: Ensure you have a .env file and include all necessary credentials to access services like LUIS and QnAMaker.
 const ENV_FILE = path.join(__dirname, '.env');
 require('dotenv').config({ path: ENV_FILE });
 
 // Create adapter.
-// See https://aka.ms/about-bot-adapter to learn more about adapters.
+// See https://aka.ms/about-bot-adapter to learn more.
 const adapter = new BotFrameworkAdapter({
     appId: process.env.MicrosoftAppId,
-    appPassword: process.env.MicrosoftAppPassword,
-    channelService: process.env.ChannelService,
-    openIdMetadata: process.env.BotOpenIdMetadata
+    appPassword: process.env.MicrosoftAppPassword
 });
 
 // Catch-all for errors.
@@ -35,27 +30,10 @@ adapter.onTurnError = async (context, error) => {
     console.error(`\n [onTurnError]: ${ error }`);
     // Send a message to the user
     await context.sendActivity(`Oops. Something went wrong!`);
-    // Clear out state
-    await conversationState.delete(context);
 };
 
-// Define a state store for your bot. See https://aka.ms/about-bot-state to learn more about using MemoryStorage.
-// A bot requires a state store to persist the dialog and user state between messages.
-let conversationState, userState;
-
-// For local development, in-memory storage is used.
-// CAUTION: The Memory Storage used here is for local bot debugging only. When the bot
-// is restarted, anything stored in memory will be gone.
-const memoryStorage = new MemoryStorage();
-conversationState = new ConversationState(memoryStorage);
-userState = new UserState(memoryStorage);
-
-// Pass in a logger to the bot. For this sample, the logger is the console, but alternatives such as Application Insights and Event Hub exist for storing the logs of the bot.
-const logger = console;
-
 // Create the main dialog.
-const dialog = new MainDialog(logger);
-const bot = new DialogAndWelcomeBot(conversationState, userState, dialog, logger);
+let bot = new DispatchBot();
 
 // Create HTTP server
 let server = restify.createServer();
