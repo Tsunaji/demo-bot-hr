@@ -6,7 +6,7 @@ class MyMenu {
         var cards = [
             CardFactory.heroCard(
                 'ตำแหน่งงานว่าง',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -27,7 +27,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 'การสัมภาษณ์',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -48,7 +48,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 ' การลาออก',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -70,7 +70,7 @@ class MyMenu {
         var cards = [
             CardFactory.heroCard(
                 'กองทุนสำรองเลี้ยงชีพ',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -91,7 +91,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 'สลิปเงินเดือน',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -107,7 +107,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 ' หนังสือรับรองเงินเดือน',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -124,7 +124,7 @@ class MyMenu {
         var cards = [
             CardFactory.heroCard(
                 '',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -161,7 +161,7 @@ class MyMenu {
         var cards = [
             CardFactory.heroCard(
                 'เงินสนับสนุน',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -177,7 +177,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 'ค่ารักษาพยาบาล',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -193,7 +193,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 'ประกาศราคาน้ำมัน',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
@@ -204,7 +204,7 @@ class MyMenu {
             ),
             CardFactory.heroCard(
                 'Fleet Card',
-                CardFactory.images(['']),
+                [],
                 CardFactory.actions([
                     {
                         type: 'imBack',
