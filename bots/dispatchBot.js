@@ -165,7 +165,10 @@ class DispatchBot extends ActivityHandler {
             console.log(results.length);
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            await context.sendActivity('ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล');
+            const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
+
+            await context.sendActivity(`ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล\n ลองเลือกดูตามรายการด้านล่างนี้นะคะ`);
+            await context.sendActivity({ attachments: [welcomeCard] });
         }
     }
 
