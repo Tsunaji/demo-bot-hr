@@ -43,7 +43,7 @@
     },
     {
       "type": "Action.Submit",
-      "title": "Welfare", 
+      "title": "Welfare",
       "data": "welfare"
     }
   ]

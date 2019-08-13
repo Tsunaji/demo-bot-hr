@@ -2,6 +2,36 @@ const { CardFactory } = require('botbuilder');
 
 class MyMenu {
 
+    welcome() {
+        return CardFactory.heroCard(
+            'Welcome to SHERA HR Bot',
+            'บริการสอบถามข้อมูลจากฝ่ายทรัพยากรบุคคล โดยท่านสามารถเลือกบริการจากเมนูด้านล่าง หรือถามคำถามสั้นๆ เกี่ยวกับคำถามที่พบบ่อย และสามารถพิมพ์ <ยกเลิก> เพื่อเริ่มการสนทนาใหม่ได้ค่ะ หากต้องการทราบรายละเอียดเพิ่มเติมสามารถติดต่อ 02-289-9888 ต่อ 9940',
+            ['https://www.shera.com/web-upload/tinymce/725507023.png'],
+            CardFactory.actions([
+                {
+                    type: 'imBack',
+                    title: 'Recruitment',
+                    value: 'recruitment'
+                },
+                {
+                    type: 'imBack',
+                    title: 'Payroll',
+                    value: 'payroll'
+                },
+                {
+                    type: 'imBack',
+                    title: 'Training',
+                    value: 'training'
+                },
+                {
+                    type: 'imBack',
+                    title: 'Welfare',
+                    value: 'welfare'
+                }
+            ])
+        );
+    }
+
     recruitment() {
         var cards = [
             CardFactory.heroCard(

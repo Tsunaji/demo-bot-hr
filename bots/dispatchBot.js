@@ -54,8 +54,8 @@ class DispatchBot extends ActivityHandler {
             for (let member of membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
                     // await context.sendActivity(`Welcome to Dispatch bot ${member.name}. ${welcomeText}`);
-                    const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
-                    await context.sendActivity({ attachments: [welcomeCard] });
+
+                    await context.sendActivity({ attachments: [myMenu.welcome()] });
                 }
             }
 
@@ -104,10 +104,8 @@ class DispatchBot extends ActivityHandler {
     async processGreeting(context, luisResult) {
         console.log('processGreeting');
 
-        const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
-
         await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
-        await context.sendActivity({ attachments: [welcomeCard] });
+        await context.sendActivity({ attachments: [myMenu.welcome()] });
     }
 
     async processRecruitment(context, luisResult) {
@@ -165,29 +163,24 @@ class DispatchBot extends ActivityHandler {
             console.log(results.length);
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
 
             await context.sendActivity(`ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล\n ลองเลือกดูตามรายการด้านล่างนี้นะคะ`);
-            await context.sendActivity({ attachments: [welcomeCard] });
+            await context.sendActivity({ attachments: [myMenu.welcome()] });
         }
     }
 
     async processCancel(context) {
         console.log('processCancel');
 
-        const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
-
         await context.sendActivity(`ยกเลิกให้แล้วค่ะ`);
-        await context.sendActivity({ attachments: [welcomeCard] });
+        await context.sendActivity({ attachments: [myMenu.welcome()] });
     }
 
     async processNone(context) {
         console.log('processNone');
 
-        const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
-
         await context.sendActivity(`ไม่เข้าใจค่ะ ลองเลือกดูรายการด้านล่างนี้นะคะ`);
-        await context.sendActivity({ attachments: [welcomeCard] });
+        await context.sendActivity({ attachments: [myMenu.welcome()] });
     }
 }
 
