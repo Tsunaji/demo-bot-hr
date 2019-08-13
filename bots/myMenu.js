@@ -191,6 +191,7 @@ class MyMenu {
         var cards = [
             CardFactory.heroCard(
                 'เงินสนับสนุน',
+                'สำหรับ Supervisor, Specialist, Manager, AVP ขึ้นไป',
                 [],
                 CardFactory.actions([
                     {

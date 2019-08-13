@@ -55,7 +55,8 @@ class DispatchBot extends ActivityHandler {
                 if (member.id !== context.activity.recipient.id) {
                     // await context.sendActivity(`Welcome to Dispatch bot ${member.name}. ${welcomeText}`);
 
-                    await context.sendActivity({ attachments: [myMenu.welcome()] });
+                    // await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
+                    // await context.sendActivity({ attachments: [myMenu.welcome()] });
                 }
             }
 
