@@ -104,8 +104,8 @@ class MyMenu {
                 CardFactory.actions([
                     {
                         type: 'imBack',
-                        title: 'สมัครได้เมื่อไหร่',
-                        value: 'สมัครได้เมื่อไหร่'
+                        title: 'สมัครกองทุนสำรองเลี้ยงชีพได้เมื่อไหร่',
+                        value: 'สมัครกองทุนสำรองเลี้ยงชีพได้เมื่อไหร่'
                     },
                     {
                         type: 'imBack',
