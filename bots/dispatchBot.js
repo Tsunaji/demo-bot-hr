@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
+const { AttachmentLayoutTypes, ActivityHandler, MessageFactory } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 const { CardFactory } = require('botbuilder-core');
 const WelcomeCard = require('./resources/welcomeCard.json');
 const { MyMenu } = require('./myMenu');
+const { Services } = require('../Services');
 
 const myMenu = new MyMenu();
+const services = new Services();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -18,9 +20,9 @@ class DispatchBot extends ActivityHandler {
             endpointKey: process.env.LuisAPIKey,
             endpoint: process.env.LuisAPIHostName
         }, {
-                includeAllIntents: true,
-                includeInstanceData: true
-            }, true);
+            includeAllIntents: true,
+            includeInstanceData: true
+        }, true);
 
         const qnaMaker = new QnAMaker({
             knowledgeBaseId: process.env.QnAKnowledgebaseId,
@@ -32,7 +34,13 @@ class DispatchBot extends ActivityHandler {
         this.qnaMaker = qnaMaker;
 
         this.onMessage(async (context, next) => {
+
+            // const menu = await services.getQuestionByText(context.activity.text);
+
             console.log('Processing Message Activity.');
+
+            const utterance = (context.activity.text || '').trim().toLowerCase();
+            console.log("utterance = " + utterance);
 
             // First, we use the dispatch model to determine which cognitive service (LUIS or QnA) to use.
             const recognizerResult = await dispatchRecognizer.recognize(context);
@@ -106,7 +114,8 @@ class DispatchBot extends ActivityHandler {
         console.log('processGreeting');
 
         await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
-        await context.sendActivity({ attachments: [myMenu.welcome()] });
+
+        await context.sendActivity({ attachments: [await myMenu.welcome()] });
     }
 
     async processRecruitment(context, luisResult) {
@@ -161,10 +170,9 @@ class DispatchBot extends ActivityHandler {
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
-            console.log(results.length);
+            // console.log(results.length);
             await context.sendActivity(`${results[0].answer}`);
         } else {
-
             await context.sendActivity(`ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล\n ลองเลือกดูตามรายการด้านล่างนี้นะคะ`);
             await context.sendActivity({ attachments: [myMenu.welcome()] });
         }
@@ -180,8 +188,9 @@ class DispatchBot extends ActivityHandler {
     async processNone(context) {
         console.log('processNone');
 
-        await context.sendActivity(`ไม่เข้าใจค่ะ ลองเลือกดูรายการด้านล่างนี้นะคะ`);
-        await context.sendActivity({ attachments: [myMenu.welcome()] });
+        // await context.sendActivity(`ไม่เข้าใจค่ะ ลองเลือกดูรายการด้านล่างนี้นะคะ`);
+        await context.sendActivity(await myMenu.randomSuggest());
+        // await context.sendActivity({ attachments: [myMenu.welcome()] });
     }
 }
 

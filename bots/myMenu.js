@@ -1,35 +1,60 @@
-const { CardFactory } = require('botbuilder');
+const { CardFactory, MessageFactory } = require('botbuilder');
+const { Services } = require('../Services');
+
+const services = new Services();
+
+const welcomeText = 'บริการสอบถามข้อมูลจากฝ่ายทรัพยากรบุคคล โดยท่านสามารถเลือกบริการจากเมนูด้านล่าง หรือถามคำถามสั้นๆ และสามารถพิมพ์ <ยกเลิก> เพื่อเริ่มการสนทนาใหม่ได้ค่ะ หากต้องการทราบรายละเอียดเพิ่มเติมสามารถติดต่อ 02-289-9888 ต่อ 9940';
 
 class MyMenu {
 
-    welcome() {
-        return CardFactory.heroCard(
+    async welcome() {
+
+        const data = await services.getMainMenu();
+
+        const mainMenu = [];
+
+        data.forEach(element => {
+            let obj = {};
+            obj.type = 'imBack';
+            obj.title = element.main_menu;
+            obj.value = element.main_menu;
+            mainMenu.push(obj);
+        });
+
+        var cards = CardFactory.heroCard(
             'Welcome to SHERA HR Bot',
-            'บริการสอบถามข้อมูลจากฝ่ายทรัพยากรบุคคล โดยท่านสามารถเลือกบริการจากเมนูด้านล่าง หรือถามคำถามสั้นๆ เกี่ยวกับคำถามที่พบบ่อย และสามารถพิมพ์ <ยกเลิก> เพื่อเริ่มการสนทนาใหม่ได้ค่ะ หากต้องการทราบรายละเอียดเพิ่มเติมสามารถติดต่อ 02-289-9888 ต่อ 9940',
+            welcomeText,
             ['https://www.shera.com/web-upload/tinymce/725507023.png'],
-            CardFactory.actions([
-                {
-                    type: 'imBack',
-                    title: 'Recruitment',
-                    value: 'recruitment'
-                },
-                {
-                    type: 'imBack',
-                    title: 'Payroll',
-                    value: 'payroll'
-                },
-                {
-                    type: 'imBack',
-                    title: 'Training',
-                    value: 'training'
-                },
-                {
-                    type: 'imBack',
-                    title: 'Welfare',
-                    value: 'welfare'
-                }
-            ])
-        );
+            CardFactory.actions(mainMenu)
+        )
+
+        return cards;
+    }
+
+    async randomSuggest() {
+
+        const data = await services.getRandomQuestion();
+
+        const mainMenu = [];
+
+        data.forEach((element) => {
+            // let obj = {};
+            // obj.type = 'imBack';
+            // obj.title = element.question;
+            // obj.value = element.question;
+            mainMenu.push(element.question);
+        });
+
+        // var cards = CardFactory.heroCard(
+        //     'Welcome to SHERA HR Bot',
+        //     '',
+        //     [],
+        //     CardFactory.actions(mainMenu)
+        // )
+
+        var reply = MessageFactory.suggestedActions(mainMenu, 'หากสนใจเรื่องตามหัวข้อด้านล่าง กดเลือกได้เลยค่ะ?');
+
+        return reply;
     }
 
     recruitment() {
@@ -77,7 +102,7 @@ class MyMenu {
                 ])
             ),
             CardFactory.heroCard(
-                ' การลาออก',
+                'การลาออก',
                 [],
                 CardFactory.actions([
                     {
@@ -212,7 +237,7 @@ class MyMenu {
                 CardFactory.actions([
                     {
                         type: 'imBack',
-                        title: 'ค่ารักษาพยาบาล',
+                        title: 'รายละเอียดค่ารักษาพยาบาล',
                         value: 'ค่ารักษาพยาบาล'
                     },
                     {
