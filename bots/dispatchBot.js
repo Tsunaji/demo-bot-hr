@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const { AttachmentLayoutTypes, ActivityHandler, MessageFactory } = require('botbuilder');
+const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
-const { CardFactory } = require('botbuilder-core');
-const WelcomeCard = require('./resources/welcomeCard.json');
+// const WelcomeCard = require('./resources/welcomeCard.json');
 const { MyMenu } = require('./myMenu');
 const { Services } = require('../Services');
 
 const myMenu = new MyMenu();
-const services = new Services();
+// const services = new Services();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -34,8 +33,6 @@ class DispatchBot extends ActivityHandler {
         this.qnaMaker = qnaMaker;
 
         this.onMessage(async (context, next) => {
-
-            // const menu = await services.getQuestionByText(context.activity.text);
 
             console.log('Processing Message Activity.');
 
@@ -79,16 +76,10 @@ class DispatchBot extends ActivityHandler {
                 await this.processGreeting(context, recognizerResult);
                 break;
             case 'l_recruitment':
-                await this.processRecruitment(context, recognizerResult);
-                break;
             case 'l_payroll':
-                await this.processPayroll(context, recognizerResult);
-                break;
             case 'l_training':
-                await this.processTraining(context, recognizerResult);
-                break;
             case 'l_welfare':
-                await this.processWelfare(context, recognizerResult);
+                await this.processSubMenu(context, recognizerResult);
                 break;
             case 'q_recruitment':
             case 'q_payroll':
@@ -113,51 +104,19 @@ class DispatchBot extends ActivityHandler {
     async processGreeting(context, luisResult) {
         console.log('processGreeting');
 
-        await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
+        console.log(luisResult.luisResult);
 
+        await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
         await context.sendActivity({ attachments: [await myMenu.welcome()] });
     }
 
-    async processRecruitment(context, luisResult) {
-        console.log('processRecruitment');
+    async processSubMenu(context, luisResult) {
+        console.log('processSubMenu');
 
         console.log(luisResult.luisResult);
 
         await context.sendActivity({
-            attachments: myMenu.recruitment(),
-            attachmentLayout: AttachmentLayoutTypes.Carousel
-        });
-    }
-
-    async processPayroll(context, luisResult) {
-        console.log('processPayroll');
-
-        console.log(luisResult.luisResult);
-
-        await context.sendActivity({
-            attachments: myMenu.payroll(),
-            attachmentLayout: AttachmentLayoutTypes.Carousel
-        });
-    }
-
-    async processTraining(context, luisResult) {
-        console.log('processTraining');
-
-        console.log(luisResult.luisResult);
-
-        await context.sendActivity({
-            attachments: myMenu.training(),
-            attachmentLayout: AttachmentLayoutTypes.Carousel
-        });
-    }
-
-    async processWelfare(context, luisResult) {
-        console.log('processWelfare');
-
-        console.log(luisResult.luisResult);
-
-        await context.sendActivity({
-            attachments: myMenu.welfare(),
+            attachments: await myMenu.subMenuByMainMenu(context.activity.text),
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
@@ -170,7 +129,6 @@ class DispatchBot extends ActivityHandler {
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
-            // console.log(results.length);
             await context.sendActivity(`${results[0].answer}`);
         } else {
             await context.sendActivity(`ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล\n ลองเลือกดูตามรายการด้านล่างนี้นะคะ`);
@@ -182,15 +140,13 @@ class DispatchBot extends ActivityHandler {
         console.log('processCancel');
 
         await context.sendActivity(`ยกเลิกให้แล้วค่ะ`);
-        await context.sendActivity({ attachments: [myMenu.welcome()] });
+        await context.sendActivity({ attachments: [await myMenu.welcome()] });
     }
 
     async processNone(context) {
         console.log('processNone');
 
-        // await context.sendActivity(`ไม่เข้าใจค่ะ ลองเลือกดูรายการด้านล่างนี้นะคะ`);
-        await context.sendActivity(await myMenu.randomSuggest());
-        // await context.sendActivity({ attachments: [myMenu.welcome()] });
+        await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
     }
 }
 
