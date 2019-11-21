@@ -120,6 +120,22 @@ class MyMenu {
         return cards;
     }
 
+    openUrlButton(input) {
+        var cards = CardFactory.heroCard(
+            '',
+            '',
+            [],
+            CardFactory.actions(
+                {
+                    type: 'openUrl',
+                    title: 'Open Link',
+                    value: input
+                }
+            )
+        )
+        return cards;
+    }
+
 }
 
 module.exports.MyMenu = MyMenu;

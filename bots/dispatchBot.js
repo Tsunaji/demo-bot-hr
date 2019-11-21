@@ -13,6 +13,7 @@ const suggestByInputText = 'ข้อมูลตรงกับที่ต้�
 const randomSuggestText = 'ขออภัยค่ะไม่พบคำตอบที่คุณถาม หากสนใจเรื่องตามหัวข้อด้านล่างสามารถกดเลือกได้เลยคะ';
 const cancelText = 'ยกเลิกให้แล้วค่ะ';
 const welcomeText = 'สวัสดีค่ะ มีอะไรให้ช่วยลองดูที่รายการด้านล่างนี้นะคะ';
+const suggestionNotReady = 'ขออภัยค่ะแบบฟอร์มส่งข้อเสนอแนะยังไม่พร้อมใช้งานในขณะนี้ค่ะ';
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -89,8 +90,10 @@ class DispatchBot extends ActivityHandler {
             case 'q_payroll':
             case 'q_training':
             case 'q_welfare':
-            case 'q_suggestion':
             case 'q_simple_question':
+                await this.processQnA(context, recognizerResult);
+                break;
+            case 'q_suggestion':
                 await this.processQnA(context, recognizerResult);
                 break;
             case 'l_cancel':
@@ -145,6 +148,21 @@ class DispatchBot extends ActivityHandler {
                 await context.sendActivity(randomSuggestText);
                 await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
             }
+        }
+    }
+
+    async processSuggestion(context, luisResult) {
+        console.log('processSuggestion');
+
+        console.log(luisResult.luisResult);
+
+        const results = await this.qnaMaker.getAnswers(context);
+
+        if (results.length > 0) {
+            await context.sendActivity({ attachments: [await myMenu.openUrlButton(results[0].answer)] });
+        } else {
+            await context.sendActivity(suggestionNotReady);
+            await context.sendActivity({ attachments: [await myMenu.welcome()] });
         }
     }
 
