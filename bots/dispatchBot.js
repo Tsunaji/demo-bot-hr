@@ -156,8 +156,15 @@ class DispatchBot extends ActivityHandler {
 
     async processNone(context) {
         console.log('processNone');
-        await context.sendActivity(randomSuggestText);
-        await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
+        var cards = await myMenu.suggestByInput(context.activity.text);
+        //search by input word or random
+        if (cards.content.buttons.length > 0) {
+            await context.sendActivity(suggestByInputText);
+            await context.sendActivity({ attachments: [await myMenu.suggestByInput(context.activity.text)] });
+        } else {
+            await context.sendActivity(randomSuggestText);
+            await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
+        }
     }
 }
 
