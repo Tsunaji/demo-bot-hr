@@ -125,13 +125,13 @@ class MyMenu {
             '',
             '',
             [],
-            CardFactory.actions(
+            CardFactory.actions([
                 {
                     type: 'openUrl',
                     title: 'Open Link',
                     value: input
                 }
-            )
+            ])
         )
         return cards;
     }

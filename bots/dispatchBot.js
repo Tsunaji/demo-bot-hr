@@ -94,7 +94,7 @@ class DispatchBot extends ActivityHandler {
                 await this.processQnA(context, recognizerResult);
                 break;
             case 'q_suggestion':
-                await this.processQnA(context, recognizerResult);
+                await this.processSuggestion(context, recognizerResult);
                 break;
             case 'l_cancel':
                 await this.processCancel(context);
@@ -159,7 +159,7 @@ class DispatchBot extends ActivityHandler {
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
-            await context.sendActivity({ attachments: [await myMenu.openUrlButton(results[0].answer)] });
+            await context.sendActivity({ attachments: [myMenu.openUrlButton(results[0].answer)] });
         } else {
             await context.sendActivity(suggestionNotReady);
             await context.sendActivity({ attachments: [await myMenu.welcome()] });
