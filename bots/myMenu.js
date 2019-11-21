@@ -5,6 +5,7 @@ const services = new Services();
 
 const welcomeText = 'บริการสอบถามข้อมูลจากฝ่ายทรัพยากรบุคคล โดยท่านสามารถเลือกบริการจากเมนูด้านล่าง หรือถามคำถามสั้นๆ และสามารถพิมพ์ "เมนู" เพื่อเริ่มการสนทนาใหม่ได้ค่ะ';
 
+
 class MyMenu {
 
     async welcome() {
@@ -20,6 +21,15 @@ class MyMenu {
             obj.value = element.main_menu;
             mainMenu.push(obj);
         });
+
+        //Fix Suggestion menu for suggest a question to HR by Microsoft Forms link
+        mainMenu.push(
+            {
+                type: 'imBack',
+                title: 'Suggestion',
+                value: 'Suggestion'
+            }
+        );
 
         var cards = CardFactory.heroCard(
             'Welcome to SHERA HR Bot',
@@ -42,12 +52,30 @@ class MyMenu {
         });
 
         var cards = CardFactory.heroCard(
-            'หากสนใจเรื่องตามหัวข้อด้านล่าง สามารถกดเลือกได้เลยคะ',
+            '',
             '',
             [],
             CardFactory.actions(questions)
         )
+        return cards;
+    }
 
+    async suggestByInput(input) {
+
+        const data = await services.getQuestionByInput(input);
+
+        const questions = [];
+
+        data.forEach((element) => {
+            questions.push(element.question);
+        });
+
+        var cards = CardFactory.heroCard(
+            '',
+            '',
+            [],
+            CardFactory.actions(questions)
+        )
         return cards;
     }
 

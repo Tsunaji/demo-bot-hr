@@ -5,10 +5,14 @@ const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 // const WelcomeCard = require('./resources/welcomeCard.json');
 const { MyMenu } = require('./myMenu');
-const { Services } = require('../Services');
 
 const myMenu = new MyMenu();
 // const services = new Services();
+
+const suggestByInputText = 'ข้อมูลตรงกับที่ต้องการหรือเปล่าคะ ถ้าใช่กดเลือกได้เลยค่ะ';
+const randomSuggestText = 'ขออภัยค่ะไม่พบคำตอบที่คุณถาม หากสนใจเรื่องตามหัวข้อด้านล่างสามารถกดเลือกได้เลยคะ';
+const cancelText = 'ยกเลิกให้แล้วค่ะ';
+const welcomeText = 'สวัสดีค่ะ มีอะไรให้ช่วยลองดูที่รายการด้านล่างนี้นะคะ';
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -85,6 +89,7 @@ class DispatchBot extends ActivityHandler {
             case 'q_payroll':
             case 'q_training':
             case 'q_welfare':
+            case 'q_suggestion':
             case 'q_simple_question':
                 await this.processQnA(context, recognizerResult);
                 break;
@@ -96,7 +101,7 @@ class DispatchBot extends ActivityHandler {
                 break;
             default:
                 console.log(`Dispatch unrecognized intent: ${intent}.`);
-                await context.sendActivity(`Dispatch unrecognized intent: ${intent}.`);
+                await this.processNone(context);
                 break;
         }
     }
@@ -106,7 +111,7 @@ class DispatchBot extends ActivityHandler {
 
         console.log(luisResult.luisResult);
 
-        await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
+        await context.sendActivity(welcomeText);
         await context.sendActivity({ attachments: [await myMenu.welcome()] });
     }
 
@@ -131,21 +136,27 @@ class DispatchBot extends ActivityHandler {
         if (results.length > 0) {
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            await context.sendActivity(`ขออภัยค่ะ ไม่พบคำตอบในฐานข้อมูล\n ลองเลือกดูตามรายการด้านล่างนี้นะคะ`);
-            await context.sendActivity({ attachments: [myMenu.welcome()] });
+            var cards = await myMenu.suggestByInput(context.activity.text);
+            //search by input word or random
+            if (cards.content.buttons.length > 0) {
+                await context.sendActivity(suggestByInputText);
+                await context.sendActivity({ attachments: [await myMenu.suggestByInput(context.activity.text)] });
+            } else {
+                await context.sendActivity(randomSuggestText);
+                await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
+            }
         }
     }
 
     async processCancel(context) {
         console.log('processCancel');
-
-        await context.sendActivity(`ยกเลิกให้แล้วค่ะ`);
+        await context.sendActivity(cancelText);
         await context.sendActivity({ attachments: [await myMenu.welcome()] });
     }
 
     async processNone(context) {
         console.log('processNone');
-
+        await context.sendActivity(randomSuggestText);
         await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
     }
 }

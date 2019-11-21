@@ -108,7 +108,7 @@ class Services {
             }
         });
 
-        const response = await sequelize.query(`select question from digitals_shera.chatbot_hr_menu where question like '%${input}%' and active_status = '1'`,
+        const response = await sequelize.query(`select question from digitals_shera.chatbot_hr_menu where question like '%${input}%' and active_status = '1' limit 6`,
             {
                 raw: true
             }).then(myTableRows => {
