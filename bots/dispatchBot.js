@@ -100,7 +100,7 @@ class DispatchBot extends ActivityHandler {
                 await this.processCancel(context);
                 break;
             case 'None':
-                await this.processNone(context);
+                await this.processQnA(context);
                 break;
             default:
                 console.log(`Dispatch unrecognized intent: ${intent}.`);
@@ -170,19 +170,6 @@ class DispatchBot extends ActivityHandler {
         console.log('processCancel');
         await context.sendActivity(cancelText);
         await context.sendActivity({ attachments: [await myMenu.welcome()] });
-    }
-
-    async processNone(context) {
-        console.log('processNone');
-        var cards = await myMenu.suggestByInput(context.activity.text);
-        //search by input word or random
-        if (cards.content.buttons.length > 0) {
-            await context.sendActivity(suggestByInputText);
-            await context.sendActivity({ attachments: [await myMenu.suggestByInput(context.activity.text)] });
-        } else {
-            await context.sendActivity(randomSuggestText);
-            await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
-        }
     }
 }
 
