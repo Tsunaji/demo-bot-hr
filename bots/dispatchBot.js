@@ -100,7 +100,7 @@ class DispatchBot extends ActivityHandler {
                 await this.processCancel(context);
                 break;
             case 'None':
-                await this.processQnA(context);
+                await this.processQnA(context, recognizerResult);
                 break;
             default:
                 console.log(`Dispatch unrecognized intent: ${intent}.`);
