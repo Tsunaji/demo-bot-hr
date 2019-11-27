@@ -1,16 +1,14 @@
 const { CardFactory } = require('botbuilder');
-const { Services } = require('../Services');
+const { MenuController } = require('../controllers/MenuController');
+const string = require('../config/string');
 
-const services = new Services();
+const menuController = new MenuController();
 
-const welcomeText = 'บริการสอบถามข้อมูลจากฝ่ายทรัพยากรบุคคล โดยท่านสามารถเลือกบริการจากเมนูด้านล่าง หรือถามคำถามสั้นๆ และสามารถพิมพ์ "เมนู" เพื่อเริ่มการสนทนาใหม่ได้ค่ะ';
-
-
-class MyMenu {
+class MenuService {
 
     async welcome() {
 
-        const data = await services.getMainMenu();
+        const data = await menuController.getMainMenu();
 
         const mainMenu = [];
 
@@ -33,7 +31,7 @@ class MyMenu {
 
         var cards = CardFactory.heroCard(
             'Welcome to SHERA HR Bot',
-            welcomeText,
+            string.welcomeDetailText,
             ['https://www.shera.com/web-upload/tinymce/725507023.png'],
             CardFactory.actions(mainMenu)
         )
@@ -43,7 +41,7 @@ class MyMenu {
 
     async randomSuggest() {
 
-        const data = await services.getRandomQuestion();
+        const data = await menuController.getRandomQuestion();
 
         const questions = [];
 
@@ -62,7 +60,7 @@ class MyMenu {
 
     async suggestByInput(input) {
 
-        const data = await services.getQuestionByInput(input);
+        const data = await menuController.getQuestionByInput(input);
 
         const questions = [];
 
@@ -81,7 +79,7 @@ class MyMenu {
 
     async subMenuByMainMenu(input) {
 
-        const data = await services.getSubMenuByMainMenu(input);
+        const data = await menuController.getSubMenuByMainMenu(input);
 
         let cards = [];
         let cardActions = [];
@@ -120,22 +118,6 @@ class MyMenu {
         return cards;
     }
 
-    openUrlButton(input) {
-        var cards = CardFactory.heroCard(
-            '',
-            '',
-            [],
-            CardFactory.actions([
-                {
-                    type: 'openUrl',
-                    title: 'Open Link',
-                    value: input
-                }
-            ])
-        )
-        return cards;
-    }
-
 }
 
-module.exports.MyMenu = MyMenu;
+module.exports.MenuService = MenuService;

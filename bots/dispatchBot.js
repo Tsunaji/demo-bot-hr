@@ -3,17 +3,12 @@
 
 const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
-// const WelcomeCard = require('./resources/welcomeCard.json');
-const { MyMenu } = require('./myMenu');
+const string = require('./config/string');
+const { MenuService } = require('./services/MenuService');
+const { CardService } = require('./services/CardService');
 
-const myMenu = new MyMenu();
-// const services = new Services();
-
-const suggestByInputText = 'ข้อมูลตรงกับที่ต้องการหรือเปล่าคะ ถ้าใช่กดเลือกได้เลยค่ะ';
-const randomSuggestText = 'ขออภัยค่ะไม่พบคำตอบที่คุณถาม หากสนใจเรื่องตามหัวข้อด้านล่างสามารถกดเลือกได้เลยคะ';
-const cancelText = 'ยกเลิกให้แล้วค่ะ';
-const welcomeText = 'สวัสดีค่ะ มีอะไรให้ช่วยลองดูที่รายการด้านล่างนี้นะคะ';
-const suggestionNotReady = 'ขออภัยค่ะแบบฟอร์มส่งข้อเสนอแนะยังไม่พร้อมใช้งานในขณะนี้ค่ะ';
+const menuService = new MenuService();
+const cardService = new CardService();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -63,10 +58,7 @@ class DispatchBot extends ActivityHandler {
 
             for (let member of membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
-                    // await context.sendActivity(`Welcome to Dispatch bot ${member.name}. ${welcomeText}`);
-
-                    // await context.sendActivity(`สวัสดีค่ะ มีอะไรให้ช่วย ลองดูที่รายการด้านล่างนี้นะคะ`);
-                    // await context.sendActivity({ attachments: [myMenu.welcome()] });
+                    console.log(`${member.name} added`);
                 }
             }
 
@@ -111,65 +103,62 @@ class DispatchBot extends ActivityHandler {
 
     async processGreeting(context, luisResult) {
         console.log('processGreeting');
+        // console.log(luisResult.luisResult);
 
-        console.log(luisResult.luisResult);
-
-        await context.sendActivity(welcomeText);
-        await context.sendActivity({ attachments: [await myMenu.welcome()] });
+        await context.sendActivity(string.welcomeText);
+        await context.sendActivity({ attachments: [await menuService.welcome()] });
     }
 
     async processSubMenu(context, luisResult) {
         console.log('processSubMenu');
-
-        console.log(luisResult.luisResult);
+        // console.log(luisResult.luisResult);
 
         await context.sendActivity({
-            attachments: await myMenu.subMenuByMainMenu(context.activity.text),
+            attachments: await menuService.subMenuByMainMenu(context.activity.text),
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
 
     async processQnA(context, luisResult) {
         console.log('processQnA');
-
-        console.log(luisResult.luisResult);
+        // console.log(luisResult.luisResult);
 
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            var cards = await myMenu.suggestByInput(context.activity.text);
+            var cards = await menuService.suggestByInput(context.activity.text);
             //search by input word or random
             if (cards.content.buttons.length > 0) {
-                await context.sendActivity(suggestByInputText);
-                await context.sendActivity({ attachments: [await myMenu.suggestByInput(context.activity.text)] });
+                await context.sendActivity(string.suggestByInputText);
+                await context.sendActivity({ attachments: [await menuService.suggestByInput(context.activity.text)] });
             } else {
-                await context.sendActivity(randomSuggestText);
-                await context.sendActivity({ attachments: [await myMenu.randomSuggest()] });
+                await context.sendActivity(string.randomSuggestText);
+                await context.sendActivity({ attachments: [await menuService.randomSuggest()] });
             }
         }
     }
 
     async processSuggestion(context, luisResult) {
         console.log('processSuggestion');
-
-        console.log(luisResult.luisResult);
+        // console.log(luisResult.luisResult);
 
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
-            await context.sendActivity({ attachments: [myMenu.openUrlButton(results[0].answer)] });
+            await context.sendActivity(string.welcomeToSuggest);
+            await context.sendActivity({ attachments: [cardService.openUrlButton(results[0].answer)] });
         } else {
-            await context.sendActivity(suggestionNotReady);
-            await context.sendActivity({ attachments: [await myMenu.welcome()] });
+            await context.sendActivity(string.suggestionNotReady);
+            await context.sendActivity({ attachments: [await menuService.welcome()] });
         }
     }
 
     async processCancel(context) {
         console.log('processCancel');
-        await context.sendActivity(cancelText);
-        await context.sendActivity({ attachments: [await myMenu.welcome()] });
+        await context.sendActivity(string.cancelText);
+        await context.sendActivity({ attachments: [await menuService.welcome()] });
     }
 }
 
