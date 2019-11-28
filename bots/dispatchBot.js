@@ -3,12 +3,14 @@
 
 const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
+const { TranslatorService } = require('./services/TranslatorService');
+const { MenuController } = require('./controllers/MenuController');
+const { CustomCard } = require('./cards/CustomCard');
 const string = require('./config/string');
-const { MenuService } = require('./services/MenuService');
-const { CardService } = require('./services/CardService');
 
-const menuService = new MenuService();
-const cardService = new CardService();
+const translatorService = new TranslatorService();
+const menuController = new MenuController();
+const customCard = new CustomCard();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -33,6 +35,8 @@ class DispatchBot extends ActivityHandler {
         this.qnaMaker = qnaMaker;
 
         this.onMessage(async (context, next) => {
+
+            console.log(context);
 
             console.log('Processing Message Activity.');
 
@@ -68,6 +72,9 @@ class DispatchBot extends ActivityHandler {
     }
 
     async dispatchToTopIntentAsync(context, intent, recognizerResult) {
+
+        // console.log(recognizerResult.luisResult);
+
         switch (intent) {
             case 'l_greeting':
                 await this.processGreeting(context, recognizerResult);
@@ -103,62 +110,58 @@ class DispatchBot extends ActivityHandler {
 
     async processGreeting(context, luisResult) {
         console.log('processGreeting');
-        // console.log(luisResult.luisResult);
 
         await context.sendActivity(string.welcomeText);
-        await context.sendActivity({ attachments: [await menuService.welcome()] });
+        await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
     async processSubMenu(context, luisResult) {
         console.log('processSubMenu');
-        // console.log(luisResult.luisResult);
 
         await context.sendActivity({
-            attachments: await menuService.subMenuByMainMenu(context.activity.text),
+            attachments: await menuController.subMenuByMainMenu(context.activity.text),
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
 
     async processQnA(context, luisResult) {
         console.log('processQnA');
-        // console.log(luisResult.luisResult);
 
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            var cards = await menuService.suggestByInput(context.activity.text);
+            var cards = await menuController.suggestByInput(context.activity.text);
             //search by input word or random
             if (cards.content.buttons.length > 0) {
                 await context.sendActivity(string.suggestByInputText);
-                await context.sendActivity({ attachments: [await menuService.suggestByInput(context.activity.text)] });
+                await context.sendActivity({ attachments: [await menuController.suggestByInput(context.activity.text)] });
             } else {
                 await context.sendActivity(string.randomSuggestText);
-                await context.sendActivity({ attachments: [await menuService.randomSuggest()] });
+                await context.sendActivity({ attachments: [await menuController.randomSuggest()] });
             }
         }
     }
 
     async processSuggestion(context, luisResult) {
         console.log('processSuggestion');
-        // console.log(luisResult.luisResult);
 
         const results = await this.qnaMaker.getAnswers(context);
 
         if (results.length > 0) {
             await context.sendActivity(string.welcomeToSuggest);
-            await context.sendActivity({ attachments: [cardService.openUrlButton(results[0].answer)] });
+            await context.sendActivity({ attachments: [customCard.openUrlButton(results[0].answer)] });
         } else {
             await context.sendActivity(string.suggestionNotReady);
-            await context.sendActivity({ attachments: [await menuService.welcome()] });
+            await context.sendActivity({ attachments: [await menuController.welcome()] });
         }
     }
 
     async processCancel(context) {
         console.log('processCancel');
         await context.sendActivity(string.cancelText);
-        await context.sendActivity({ attachments: [await menuService.welcome()] });
+        await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 }
 

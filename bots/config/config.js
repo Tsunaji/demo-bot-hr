@@ -13,7 +13,10 @@ const config = {
         ssl: {
             ca: fs.readFileSync(path.join(__dirname, '/BaltimoreCyberTrustRoot.crt.pem'))
         }
-    }
+    },
+    microsoftTranslatorUrl: 'https://api.cognitive.microsofttranslator.com/translate',
+    microsoftTranslatorApiVersion: '3.0',
+    microsoftTranslatorKey: process.env.MicrosoftTranslatorKey || process.env.MicrosoftTranslatorKey,
 };
 
 module.exports = config;

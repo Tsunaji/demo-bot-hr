@@ -1,121 +1,84 @@
-const { CardFactory } = require('botbuilder');
-const { MenuController } = require('../controllers/MenuController');
-const string = require('../config/string');
-
-const menuController = new MenuController();
+const db = require('../config/db');
+const sequelize = db.sequelize;
 
 class MenuService {
 
-    async welcome() {
-
-        const data = await menuController.getMainMenu();
-
-        const mainMenu = [];
-
-        data.forEach(element => {
-            let obj = {};
-            obj.type = 'imBack';
-            obj.title = element.main_menu;
-            obj.value = element.main_menu;
-            mainMenu.push(obj);
-        });
-
-        //Fix Suggestion menu for suggest a question to HR by Microsoft Forms link
-        mainMenu.push(
+    async getAllMenu() {
+        const query = `SELECT * FROM chatbot_hr_menu where active_status = '1'`;
+        const response = await sequelize.query(query,
             {
-                type: 'imBack',
-                title: 'Suggestion',
-                value: 'Suggestion'
-            }
-        );
-
-        var cards = CardFactory.heroCard(
-            'Welcome to SHERA HR Bot',
-            string.welcomeDetailText,
-            ['https://www.shera.com/web-upload/tinymce/725507023.png'],
-            CardFactory.actions(mainMenu)
-        )
-
-        return cards;
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
     }
 
-    async randomSuggest() {
-
-        const data = await menuController.getRandomQuestion();
-
-        const questions = [];
-
-        data.forEach((element) => {
-            questions.push(element.question);
-        });
-
-        var cards = CardFactory.heroCard(
-            '',
-            '',
-            [],
-            CardFactory.actions(questions)
-        )
-        return cards;
+    async getMainMenu() {
+        const query = `select main_menu from chatbot_hr_menu where active_status = '1' group by main_menu`;
+        const response = await sequelize.query(query,
+            {
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
     }
 
-    async suggestByInput(input) {
-
-        const data = await menuController.getQuestionByInput(input);
-
-        const questions = [];
-
-        data.forEach((element) => {
-            questions.push(element.question);
-        });
-
-        var cards = CardFactory.heroCard(
-            '',
-            '',
-            [],
-            CardFactory.actions(questions)
-        )
-        return cards;
+    async getMenuByMainMenu(input) {
+        const query = `select * from chatbot_hr_menu where main_menu = '${input}' and active_status = '1' order by sub_menu`;
+        const response = await sequelize.query(query,
+            {
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
     }
 
-    async subMenuByMainMenu(input) {
+    async getSubMenuByMainMenu(input) {
+        const query = `select * from digitals_shera.chatbot_hr_menu where main_menu = '${input}' and active_status = '1' order by sub_menu`;
+        const response = await sequelize.query(query,
+            {
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
+    }
 
-        const data = await menuController.getSubMenuByMainMenu(input);
+    async getRandomQuestion() {
+        const query = `select question from chatbot_hr_menu where active_status = '1' order by rand() limit 3`;
+        const response = await sequelize.query(query,
+            {
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
+    }
 
-        let cards = [];
-        let cardActions = [];
-        let action = {};
-        let subTemp = '';
-
-        for (let i = 0; i < data.length; i++) {
-            if (subTemp !== data[i].sub_menu) {
-                if (i != 0) {
-                    cards.push(CardFactory.heroCard(
-                        subTemp,
-                        [],
-                        CardFactory.actions(cardActions)
-                    ))
-                    cardActions = [];
-                }
-                subTemp = data[i].sub_menu;
-            }
-
-            action.type = 'imBack';
-            action.title = data[i].question;
-            action.value = data[i].question;
-
-            cardActions.push(action);
-
-            action = {};
-
-            if (i === data.length - 1) {
-                cards.push(CardFactory.heroCard(
-                    subTemp,
-                    [],
-                    CardFactory.actions(cardActions)
-                ))
-            }
-        }
-        return cards;
+    async getQuestionByInput(input) {
+        const query = `select question from chatbot_hr_menu where question like '%${input}%' and active_status = '1' limit 6`;
+        const response = await sequelize.query(query,
+            {
+                raw: true
+            }).then(myTableRows => {
+                return myTableRows[0];
+            }).catch(function (err) {
+                console.log(err);
+            });
+        return response;
     }
 
 }

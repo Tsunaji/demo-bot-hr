@@ -1,92 +1,43 @@
-const db = require('../config/db');
-const sequelize = db.sequelize;
+const { MenuService } = require('../services/MenuService');
+const { MenuCard } = require('../cards/MenuCard');
+
+const menuService = new MenuService();
+const menuCard = new MenuCard();
 
 class MenuController {
 
-    async getAllMenu() {
-        const query = `SELECT * FROM chatbot_hr_menu where active_status = '1'`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
+    async welcome() {
+
+        const data = await menuService.getMainMenu();
+
+        return menuCard.welcome(data);
+
     }
 
-    async getMainMenu() {
-        const query = `select main_menu from chatbot_hr_menu where active_status = '1' group by main_menu`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
+    async randomSuggest() {
+
+        const data = await menuService.getRandomQuestion();
+
+        return menuCard.randomSuggest(data);
+
     }
 
-    async getMenuByMainMenu(input) {
-        const query = `select * from chatbot_hr_menu where main_menu = '${input}' and active_status = '1' order by sub_menu`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
+    async suggestByInput(input) {
+
+        const data = await menuService.getQuestionByInput(input);
+
+        return menuCard.suggestByInput(data);
+
     }
 
-    async getSubMenuByMainMenu(input) {
-        const query = `select * from digitals_shera.chatbot_hr_menu where main_menu = '${input}' and active_status = '1' order by sub_menu`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
-    }
+    async subMenuByMainMenu(input) {
 
-    async getRandomQuestion() {
-        const query = `select question from chatbot_hr_menu where active_status = '1' order by rand() limit 3`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
-    }
+        const data = await menuService.getSubMenuByMainMenu(input);
 
-    async getQuestionByInput(input) {
-        const query = `select question from chatbot_hr_menu where question like '%${input}%' and active_status = '1' limit 6`;
-        const response = await sequelize.query(query,
-            {
-                raw: true
-            }).then(myTableRows => {
-                return myTableRows[0];
-            }).catch(function (err) {
-                // console.log(err);
-                return [];
-            });
-        return response;
+        return menuCard.subMenuByMainMenu(data);
+
     }
 
 }
 
-exports.MenuController = MenuController;
+module.exports.MenuController = MenuController;

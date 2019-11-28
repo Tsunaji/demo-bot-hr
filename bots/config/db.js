@@ -6,6 +6,7 @@ const sequelize = new Sequelize(config.mySqlDatabase, config.mySqlUser, config.m
     host: config.mySqlHost,
     dialectOptions: config.dialectOptions
 });
+
 const db = {};
 
 db.sequelize = sequelize;

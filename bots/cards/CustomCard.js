@@ -1,6 +1,6 @@
 const { CardFactory } = require('botbuilder');
 
-class CardService {
+class CustomCard {
 
     openUrlButton(input) {
         var cards = CardFactory.heroCard(
@@ -20,4 +20,4 @@ class CardService {
 
 }
 
-module.exports.CardService = CardService;
+module.exports.CustomCard = CustomCard;
