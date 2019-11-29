@@ -14,9 +14,13 @@ const config = {
             ca: fs.readFileSync(path.join(__dirname, '/BaltimoreCyberTrustRoot.crt.pem'))
         }
     },
-    microsoftTranslatorUrl: 'https://api.cognitive.microsofttranslator.com/translate',
+    microsoftTranslatorEndpoint: 'https://api.cognitive.microsofttranslator.com/translate',
     microsoftTranslatorApiVersion: '3.0',
     microsoftTranslatorKey: process.env.MicrosoftTranslatorKey || process.env.MicrosoftTranslatorKey,
+    luisAppId: process.env.LuisAppId || process.env.LuisAppId,
+    luisAPIKey: process.env.LuisAPIKey || process.env.LuisAPIKey,
+    luisAPIHostName: 'https://southeastasia.api.cognitive.microsoft.com/',
+    luisSlots: 'production'
 };
 
 module.exports = config;

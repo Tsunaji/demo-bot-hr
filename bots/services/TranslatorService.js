@@ -6,7 +6,7 @@ class TranslatorService {
     async getTranslateToThai(input) {
         return await axios({
             method: 'post',
-            url: config.microsoftTranslatorUrl,
+            url: config.microsoftTranslatorEndpoint,
             params: {
                 'api-version': '3.0',
                 'to': 'th'
@@ -31,7 +31,7 @@ class TranslatorService {
     async getTranslateToEng(input) {
         return await axios({
             method: 'post',
-            url: config.microsoftTranslatorUrl,
+            url: config.microsoftTranslatorEndpoint,
             params: {
                 'api-version': '3.0',
                 'to': 'en'
@@ -52,8 +52,6 @@ class TranslatorService {
                 console.log(error.response);
             });
     }
-
-
 
 }
 

@@ -3,12 +3,14 @@
 
 const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
-const { TranslatorService } = require('./services/TranslatorService');
+const { TranslatorController } = require('./controllers/TranslatorController');
 const { MenuController } = require('./controllers/MenuController');
+const { LuisController } = require('./controllers/LuisController');
 const { CustomCard } = require('./cards/CustomCard');
 const string = require('./config/string');
 
-const translatorService = new TranslatorService();
+const luisController = new LuisController();
+const translatorController = new TranslatorController();
 const menuController = new MenuController();
 const customCard = new CustomCard();
 
@@ -36,9 +38,9 @@ class DispatchBot extends ActivityHandler {
 
         this.onMessage(async (context, next) => {
 
-            console.log(context);
-
             console.log('Processing Message Activity.');
+
+            // console.log(context);
 
             const utterance = (context.activity.text || '').trim().toLowerCase();
             console.log("utterance = " + utterance);
@@ -73,7 +75,7 @@ class DispatchBot extends ActivityHandler {
 
     async dispatchToTopIntentAsync(context, intent, recognizerResult) {
 
-        // console.log(recognizerResult.luisResult);
+        console.log(recognizerResult.luisResult);
 
         switch (intent) {
             case 'l_greeting':
@@ -108,14 +110,14 @@ class DispatchBot extends ActivityHandler {
         }
     }
 
-    async processGreeting(context, luisResult) {
+    async processGreeting(context, luisResult, luisResultEng) {
         console.log('processGreeting');
 
         await context.sendActivity(string.welcomeText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
-    async processSubMenu(context, luisResult) {
+    async processSubMenu(context, luisResult, luisResultEng) {
         console.log('processSubMenu');
 
         await context.sendActivity({
@@ -124,7 +126,7 @@ class DispatchBot extends ActivityHandler {
         });
     }
 
-    async processQnA(context, luisResult) {
+    async processQnA(context, luisResult, luisResultEng) {
         console.log('processQnA');
 
         const results = await this.qnaMaker.getAnswers(context);
@@ -132,11 +134,19 @@ class DispatchBot extends ActivityHandler {
         if (results.length > 0) {
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            var cards = await menuController.suggestByInput(context.activity.text);
+
+            var keyword = await this.findKeyword(context.activity.text);
+            let card = {};
+
+            if (keyword === "") {
+                card = await menuController.suggestByInput(context.activity.text);
+            } else {
+                card = await this.keywordSelection(keyword);
+            }
             //search by input word or random
-            if (cards.content.buttons.length > 0) {
+            if (card.content.buttons.length > 0) {
                 await context.sendActivity(string.suggestByInputText);
-                await context.sendActivity({ attachments: [await menuController.suggestByInput(context.activity.text)] });
+                await context.sendActivity({ attachments: [card] });
             } else {
                 await context.sendActivity(string.randomSuggestText);
                 await context.sendActivity({ attachments: [await menuController.randomSuggest()] });
@@ -144,7 +154,7 @@ class DispatchBot extends ActivityHandler {
         }
     }
 
-    async processSuggestion(context, luisResult) {
+    async processSuggestion(context, luisResult, luisResultEng) {
         console.log('processSuggestion');
 
         const results = await this.qnaMaker.getAnswers(context);
@@ -162,6 +172,37 @@ class DispatchBot extends ActivityHandler {
         console.log('processCancel');
         await context.sendActivity(string.cancelText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
+    }
+
+    async findKeyword(utterance) {
+        const utteranceEng = await translatorController.translateToEng(utterance);
+        const entity = await luisController.getEntities(utteranceEng);
+        var keyword = "";
+        console.log(entity);
+        for (var key in entity['$instance']) {
+            keyword = entity['$instance'][key][0].text;
+            console.log(entity['$instance'][key]);
+            break;
+        }
+        console.log('keyword: ' + keyword);
+        return keyword;
+    }
+
+    async keywordSelection(keyword) {
+
+        var card = {}
+
+        card = await menuController.suggestByInput(keyword);
+
+        if (card.content.buttons.length > 0) {
+            console.log('eng');
+            return card;
+        } else {
+            console.log('th');
+            var keywordToThai = await translatorController.translateToThai(keyword);
+            return card = await menuController.suggestByInput(keywordToThai);
+        }
+
     }
 }
 
