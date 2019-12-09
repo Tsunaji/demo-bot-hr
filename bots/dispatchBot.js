@@ -110,55 +110,23 @@ class DispatchBot extends ActivityHandler {
         }
     }
 
-    async processGreeting(context, luisResult, luisResultEng) {
-        console.log('processGreeting');
-
+    async processGreeting(context, luisResult) {
+        // console.log('processGreeting');
         await context.sendActivity(string.welcomeText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
-    async processSubMenu(context, luisResult, luisResultEng) {
-        console.log('processSubMenu');
-
+    async processSubMenu(context, luisResult) {
+        // console.log('processSubMenu');
         await context.sendActivity({
             attachments: await menuController.subMenuByMainMenu(context.activity.text),
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
 
-    async processQnA(context, luisResult, luisResultEng) {
-        console.log('processQnA');
-
+    async processSuggestion(context, luisResult) {
+        // console.log('processSuggestion');
         const results = await this.qnaMaker.getAnswers(context);
-
-        if (results.length > 0) {
-            await context.sendActivity(`${results[0].answer}`);
-        } else {
-
-            var keyword = await this.findKeyword(context.activity.text);
-            let card = {};
-
-            if (keyword === "") {
-                card = await menuController.suggestByInput(context.activity.text);
-            } else {
-                card = await this.keywordSelection(keyword);
-            }
-            //search by input word or random
-            if (card.content.buttons.length > 0) {
-                await context.sendActivity(string.suggestByInputText);
-                await context.sendActivity({ attachments: [card] });
-            } else {
-                await context.sendActivity(string.randomSuggestText);
-                await context.sendActivity({ attachments: [await menuController.randomSuggest()] });
-            }
-        }
-    }
-
-    async processSuggestion(context, luisResult, luisResultEng) {
-        console.log('processSuggestion');
-
-        const results = await this.qnaMaker.getAnswers(context);
-
         if (results.length > 0) {
             await context.sendActivity(string.welcomeToSuggest);
             await context.sendActivity({ attachments: [customCard.openUrlButton(results[0].answer)] });
@@ -169,41 +137,68 @@ class DispatchBot extends ActivityHandler {
     }
 
     async processCancel(context) {
-        console.log('processCancel');
+        // console.log('processCancel');
         await context.sendActivity(string.cancelText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
-    async findKeyword(utterance) {
-        const utteranceEng = await translatorController.translateToEng(utterance);
-        const entity = await luisController.getEntities(utteranceEng);
-        var keyword = "";
-        console.log(entity);
-        for (var key in entity['$instance']) {
-            keyword = entity['$instance'][key][0].text;
-            console.log(entity['$instance'][key]);
-            break;
+    async processQnA(context, luisResult) {
+        // console.log('processQnA');
+        const results = await this.qnaMaker.getAnswers(context);
+        if (results.length > 0) {
+            await context.sendActivity(`${results[0].answer}`);
+        } else {
+            const card = this.qnaNoAnswerCard(context.activity.text);
+            await context.sendActivity({ attachments: [card] });
         }
-        console.log('keyword: ' + keyword);
-        return keyword;
     }
 
-    async keywordSelection(keyword) {
+    async parseKeywordEntity(utterance) {
+        const utteranceEng = await translatorController.translateToEng(utterance);
+        const keywordEntity = await luisController.getEntities(utteranceEng);
+        let keywordValue = '';
+        if (typeof keywordEntity.keyword !== "undefined") {
+            console.log(keywordEntity.keyword);
+            keywordValue = keywordEntity.keyword[0];
+        }
+        return keywordValue;
+    }
 
-        var card = {}
-
+    async keywordEngOrThaiSelection(keyword) {
+        let card = {}
         card = await menuController.suggestByInput(keyword);
-
         if (card.content.buttons.length > 0) {
-            console.log('eng');
             return card;
         } else {
-            console.log('th');
             var keywordToThai = await translatorController.translateToThai(keyword);
             return card = await menuController.suggestByInput(keywordToThai);
         }
-
     }
+
+    async qnaNoAnswerCard(utterance) {
+        const keyword = await this.parseKeywordEntity(utterance);
+        const card = await this.cardByKeywordOrWholeText(keyword);
+        return await this.suggestByKeywordOrRandom(card);
+    }
+
+    async cardByKeywordOrWholeText(keyword) {
+        if (keyword !== '') {
+            return card = await this.keywordEngOrThaiSelection(keyword);
+        } else {
+            return card = await menuController.suggestByInput(context.activity.text);
+        }
+    }
+
+    async suggestByKeywordOrRandom(card) {
+        if (card.content.buttons.length > 0) {
+            await context.sendActivity(string.suggestByInputText);
+            return card;
+        } else {
+            await context.sendActivity(string.randomSuggestText);
+            return await menuController.randomSuggest();
+        }
+    }
+
 }
 
 module.exports.DispatchBot = DispatchBot;
