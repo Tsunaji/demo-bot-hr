@@ -148,8 +148,22 @@ class DispatchBot extends ActivityHandler {
         if (results.length > 0) {
             await context.sendActivity(`${results[0].answer}`);
         } else {
-            const card = this.qnaNoAnswerCard(context.activity.text);
+            const card = await this.qnaNoAnswerCard(context.activity.text, context);
             await context.sendActivity({ attachments: [card] });
+        }
+    }
+
+    async qnaNoAnswerCard(utterance, context) {
+        const keyword = await this.parseKeywordEntity(utterance);
+        const card = await this.cardByKeywordOrWholeText(keyword, utterance);
+        return await this.suggestByKeywordOrRandom(card, context);
+    }
+
+    async cardByKeywordOrWholeText(keyword, utterance) {
+        if (keyword !== '') {
+            return await this.keywordEngOrThaiSelection(keyword);
+        } else {
+            return await menuController.suggestByInput(utterance);
         }
     }
 
@@ -170,26 +184,13 @@ class DispatchBot extends ActivityHandler {
         if (card.content.buttons.length > 0) {
             return card;
         } else {
-            var keywordToThai = await translatorController.translateToThai(keyword);
-            return card = await menuController.suggestByInput(keywordToThai);
+            const keywordToThai = await translatorController.translateToThai(keyword);
+            card = await menuController.suggestByInput(keywordToThai);
+            return card;
         }
     }
 
-    async qnaNoAnswerCard(utterance) {
-        const keyword = await this.parseKeywordEntity(utterance);
-        const card = await this.cardByKeywordOrWholeText(keyword);
-        return await this.suggestByKeywordOrRandom(card);
-    }
-
-    async cardByKeywordOrWholeText(keyword) {
-        if (keyword !== '') {
-            return card = await this.keywordEngOrThaiSelection(keyword);
-        } else {
-            return card = await menuController.suggestByInput(context.activity.text);
-        }
-    }
-
-    async suggestByKeywordOrRandom(card) {
+    async suggestByKeywordOrRandom(card, context) {
         if (card.content.buttons.length > 0) {
             await context.sendActivity(string.suggestByInputText);
             return card;
