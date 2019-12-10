@@ -6,7 +6,7 @@ class LuisController {
 
     async getEntities(utterance) {
         const prediction = await luisService.getPrediction(utterance);
-        console.log(prediction);
+        // console.log(prediction);
         return prediction.prediction.entities;
     }
 

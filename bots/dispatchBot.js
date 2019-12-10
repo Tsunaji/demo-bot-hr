@@ -6,13 +6,11 @@ const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 const { TranslatorController } = require('./controllers/TranslatorController');
 const { MenuController } = require('./controllers/MenuController');
 const { LuisController } = require('./controllers/LuisController');
-const { CustomCard } = require('./cards/CustomCard');
 const string = require('./config/string');
 
 const luisController = new LuisController();
 const translatorController = new TranslatorController();
 const menuController = new MenuController();
-const customCard = new CustomCard();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -37,10 +35,6 @@ class DispatchBot extends ActivityHandler {
         this.qnaMaker = qnaMaker;
 
         this.onMessage(async (context, next) => {
-
-            console.log('Processing Message Activity.');
-
-            // console.log(context);
 
             const utterance = (context.activity.text || '').trim().toLowerCase();
             console.log("utterance = " + utterance);
@@ -79,57 +73,66 @@ class DispatchBot extends ActivityHandler {
 
         switch (intent) {
             case 'l_greeting':
-                await this.processGreeting(context, recognizerResult);
+                await this.processGreeting(context);
                 break;
             case 'l_recruitment':
             case 'l_payroll':
             case 'l_training':
             case 'l_welfare':
-                await this.processSubMenu(context, recognizerResult);
+                await this.processSubMenu(context);
                 break;
             case 'q_recruitment':
             case 'q_payroll':
             case 'q_training':
             case 'q_welfare':
             case 'q_simple_question':
-                await this.processQnA(context, recognizerResult);
+                await this.processQnA(context);
                 break;
             case 'q_suggestion':
-                await this.processSuggestion(context, recognizerResult);
+                await this.processSuggestion(context);
                 break;
             case 'l_cancel':
                 await this.processCancel(context);
                 break;
             case 'None':
-                await this.processQnA(context, recognizerResult);
+                await this.processQnA(context);
                 break;
             default:
                 console.log(`Dispatch unrecognized intent: ${intent}.`);
-                await this.processNone(context);
+                await this.processQnA(context);
                 break;
         }
     }
 
-    async processGreeting(context, luisResult) {
-        // console.log('processGreeting');
+    async processGreeting(context) {
         await context.sendActivity(string.welcomeText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
-    async processSubMenu(context, luisResult) {
-        // console.log('processSubMenu');
+    async processSubMenu(context) {
+        const utterance = context.activity.text;
+        let card = await menuController.subMenuByMainMenu(utterance)
+
+        //if no card maybe input sub menu by Thai
+        //try to translate to Eng and search again
+        if (card.length <= 0) {
+            const keyword = await this.parseKeywordEntity(utterance);
+            card = await menuController.subMenuByMainMenu(keyword)
+        }
+
         await context.sendActivity({
-            attachments: await menuController.subMenuByMainMenu(context.activity.text),
+            attachments: card,
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
 
-    async processSuggestion(context, luisResult) {
-        // console.log('processSuggestion');
+
+
+    async processSuggestion(context) {
         const results = await this.qnaMaker.getAnswers(context);
         if (results.length > 0) {
             await context.sendActivity(string.welcomeToSuggest);
-            await context.sendActivity({ attachments: [customCard.openUrlButton(results[0].answer)] });
+            await context.sendActivity(results[0].answer);
         } else {
             await context.sendActivity(string.suggestionNotReady);
             await context.sendActivity({ attachments: [await menuController.welcome()] });
@@ -137,16 +140,14 @@ class DispatchBot extends ActivityHandler {
     }
 
     async processCancel(context) {
-        // console.log('processCancel');
         await context.sendActivity(string.cancelText);
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
-    async processQnA(context, luisResult) {
-        // console.log('processQnA');
+    async processQnA(context) {
         const results = await this.qnaMaker.getAnswers(context);
         if (results.length > 0) {
-            await context.sendActivity(`${results[0].answer}`);
+            await context.sendActivity(results[0].answer);
         } else {
             const card = await this.qnaNoAnswerCard(context.activity.text, context);
             await context.sendActivity({ attachments: [card] });
@@ -169,11 +170,12 @@ class DispatchBot extends ActivityHandler {
 
     async parseKeywordEntity(utterance) {
         const utteranceEng = await translatorController.translateToEng(utterance);
-        const keywordEntity = await luisController.getEntities(utteranceEng);
+        const Entities = await luisController.getEntities(utteranceEng);
         let keywordValue = '';
-        if (typeof keywordEntity.keyword !== "undefined") {
-            console.log(keywordEntity.keyword);
-            keywordValue = keywordEntity.keyword[0];
+        if (typeof Entities.keyword !== "undefined") {
+            keywordValue = Entities.keyword[0];
+        } else if (typeof Entities.keyword_synonym !== "undefined") {
+            keywordValue = Entities.keyword_synonym[0][0];
         }
         return keywordValue;
     }
