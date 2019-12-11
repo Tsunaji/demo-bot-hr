@@ -3,14 +3,16 @@
 
 const { AttachmentLayoutTypes, ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
-const { TranslatorController } = require('./controllers/TranslatorController');
 const { MenuController } = require('./controllers/MenuController');
 const { LuisController } = require('./controllers/LuisController');
+const { SuggestController } = require('./controllers/SuggestController');
+const { SubMenuController } = require('./controllers/SubMenuController');
 const string = require('./config/string');
 
 const luisController = new LuisController();
-const translatorController = new TranslatorController();
 const menuController = new MenuController();
+const subMenuController = new SubMenuController();
+const suggestController = new SuggestController();
 
 class DispatchBot extends ActivityHandler {
     constructor() {
@@ -109,24 +111,20 @@ class DispatchBot extends ActivityHandler {
         await context.sendActivity({ attachments: [await menuController.welcome()] });
     }
 
+    async processCancel(context) {
+        await context.sendActivity(string.cancelText);
+        await context.sendActivity({ attachments: [await menuController.welcome()] });
+    }
+
     async processSubMenu(context) {
         const utterance = context.activity.text;
-        let card = await menuController.subMenuByMainMenu(utterance)
-
-        //if no card maybe input sub menu by Thai
-        //try to translate to Eng and search again
-        if (card.length <= 0) {
-            const keyword = await this.parseKeywordEntity(utterance);
-            card = await menuController.subMenuByMainMenu(keyword)
-        }
+        const card = await subMenuController.getSubMenuCard(utterance)
 
         await context.sendActivity({
             attachments: card,
             attachmentLayout: AttachmentLayoutTypes.Carousel
         });
     }
-
-
 
     async processSuggestion(context) {
         const results = await this.qnaMaker.getAnswers(context);
@@ -139,69 +137,15 @@ class DispatchBot extends ActivityHandler {
         }
     }
 
-    async processCancel(context) {
-        await context.sendActivity(string.cancelText);
-        await context.sendActivity({ attachments: [await menuController.welcome()] });
-    }
-
     async processQnA(context) {
         const results = await this.qnaMaker.getAnswers(context);
         if (results.length > 0) {
             await context.sendActivity(results[0].answer);
         } else {
-            const card = await this.qnaNoAnswerCard(context.activity.text, context);
+            const card = await suggestController.getSuggestCard(context.activity.text, context);
             await context.sendActivity({ attachments: [card] });
         }
     }
-
-    async qnaNoAnswerCard(utterance, context) {
-        const keyword = await this.parseKeywordEntity(utterance);
-        const card = await this.cardByKeywordOrWholeText(keyword, utterance);
-        return await this.suggestByKeywordOrRandom(card, context);
-    }
-
-    async cardByKeywordOrWholeText(keyword, utterance) {
-        if (keyword !== '') {
-            return await this.keywordEngOrThaiSelection(keyword);
-        } else {
-            return await menuController.suggestByInput(utterance);
-        }
-    }
-
-    async parseKeywordEntity(utterance) {
-        const utteranceEng = await translatorController.translateToEng(utterance);
-        const Entities = await luisController.getEntities(utteranceEng);
-        let keywordValue = '';
-        if (typeof Entities.keyword !== "undefined") {
-            keywordValue = Entities.keyword[0];
-        } else if (typeof Entities.keyword_synonym !== "undefined") {
-            keywordValue = Entities.keyword_synonym[0][0];
-        }
-        return keywordValue;
-    }
-
-    async keywordEngOrThaiSelection(keyword) {
-        let card = {}
-        card = await menuController.suggestByInput(keyword);
-        if (card.content.buttons.length > 0) {
-            return card;
-        } else {
-            const keywordToThai = await translatorController.translateToThai(keyword);
-            card = await menuController.suggestByInput(keywordToThai);
-            return card;
-        }
-    }
-
-    async suggestByKeywordOrRandom(card, context) {
-        if (card.content.buttons.length > 0) {
-            await context.sendActivity(string.suggestByInputText);
-            return card;
-        } else {
-            await context.sendActivity(string.randomSuggestText);
-            return await menuController.randomSuggest();
-        }
-    }
-
 }
 
 module.exports.DispatchBot = DispatchBot;
