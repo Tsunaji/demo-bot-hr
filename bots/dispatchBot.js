@@ -118,7 +118,7 @@ class DispatchBot extends ActivityHandler {
 
     async processSubMenu(context) {
         const utterance = context.activity.text;
-        const card = await subMenuController.getSubMenuCard(utterance)
+        const card = await subMenuController.getSubMenuCard(utterance, context);
 
         await context.sendActivity({
             attachments: card,

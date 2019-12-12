@@ -7,7 +7,8 @@ const menuController = new MenuController();
 
 class SubMenuController {
 
-    async getSubMenuCard(utterance) {
+    async getSubMenuCard(utterance, context) {
+        console.log(`get sub menu`)
         let card = await menuController.subMenuByMainMenu(utterance)
 
         //if no card maybe input sub menu by Thai
@@ -20,7 +21,8 @@ class SubMenuController {
         //if still have no card then return random
         if (card.length <= 0) {
             await context.sendActivity(string.randomSuggestText);
-            card = await menuController.randomSuggest();
+            const subCard = await menuController.randomSuggest();
+            card.push(subCard);
         }
         return card;
     }
